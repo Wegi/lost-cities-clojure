@@ -1,6 +1,7 @@
 (ns lcc.board
   (:require [clojure.spec.alpha :as s]
-            [ghostwheel.core :refer [>defn >defn-]]))
+            [ghostwheel.core :refer [>defn >defn- ?]]
+            [lcc.logic :as logic]))
 
 (def ^:private empty-board
   {:player-1 {:yellow [] :white [] :green [] :blue [] :red [] :hand []}
@@ -33,7 +34,7 @@
   "Draw x cards. Return a tuple of the drawn cards and the rest of the deck."
   [deck n]
   [vector? int? :ret (s/tuple vector? vector?)]
-  [(take n deck) (drop n deck)])
+  [(take n deck) (vec (drop n deck))])
 
 (>defn set-up-game
   "Sets up the game ready to go."
@@ -47,18 +48,27 @@
         (assoc-in [:player-2 :hand] hand-2)
         (assoc-in [:board :draw-pile] starting-deck))))
 
-(>defn allowed-play?
-  "Test whether a play is allowed."
-  [path new-card]
-  [vector? map? :ret boolean?]
-  (if (seq path)
-    (let [last-card (peek path)]
-      (and (= (:suit last-card) (:suit new-card))
-           (or (keyword? (:value last-card))
-               (< (:value last-card) (:value new-card)))))
-    true))
+(>defn add-to-discard
+  "Discard a card to the board. Returns the new board."
+  [state card]
+  [map? map? :ret map?]
+  (update-in state [:board (:suit card)] conj card))
 
-(comment
-  (allowed-play? [] {:suit :red :value 2})
-  (allowed-play? [{:suit :red :value :wager}] {:suit :red :value 2})
-  (allowed-play? [{:suit :red :value :wager} {:suit :red :value 4}] {:suit :red :value 2}))
+(>defn add-to-path
+  "Plays a card onto the players side if the path allows it."
+  [state card player]
+  [map? map? keyword? :ret (? map?)]
+  (let [suit (:suit card)
+        path (get-in state [player suit])]
+    (when (logic/allowed-play? path card)
+      (update-in state [player suit] conj card))))
+
+(>defn draw
+  "A player draws a card into their hand."
+  [state player]
+  [map? keyword? :ret map?]
+  (let [deck-before-draw (get-in state [:board :draw-pile])
+        [[new-card] rest-deck] (draw-n deck-before-draw 1)]
+    (-> state
+        (update-in [player :hand] conj new-card)
+        (assoc-in [:board :draw-pile] rest-deck))))
