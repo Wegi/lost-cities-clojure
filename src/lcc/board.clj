@@ -30,6 +30,12 @@
    {:suit :red :value 5} {:suit :red :value 6} {:suit :red :value 7}
    {:suit :red :value 8} {:suit :red :value 9} {:suit :red :value 10}])
 
+(def ^:private card-value-padding
+  ["  " "  " "  " "  " "  " "  " "  "])
+
+(def ^:private colors
+  [:yellow :blue :white :green :red])
+
 (>defn- draw-n
   "Draw x cards. Return a tuple of the drawn cards and the rest of the deck."
   [deck n]
@@ -72,3 +78,72 @@
     (-> state
         (update-in [player :hand] conj new-card)
         (assoc-in [:board :draw-pile] rest-deck))))
+
+(>defn- value-for-print
+  "Convert the values for print. (Padding and abbreviations)"
+  [value]
+  [(? (s/or :n int? :k keyword?)) :ret string?]
+  (case value
+    :wager ":W"
+    10 "10"
+    nil "  "
+    (str " " value)))
+
+(>defn- print-player!
+  "Prints the side of `player-1` or `player-2`."
+  [board player FoW?]
+  [map? keyword? boolean? :ret nil?]
+  (let [max-range (apply max (map count (vals (player board))))
+        counter (if (= :player-1 player) (range max-range) (range (dec max-range) -1 -1))]
+    (doseq [index counter]
+      (->> (if FoW? colors (conj colors :hand))
+           (map #(value-for-print (get-in board [player % index :value])))
+           (interleave card-value-padding)
+           (apply str)
+           println))))
+
+(>defn- print-discards!
+  "Prints the discard-line."
+  [board]
+  [map? :ret nil?]
+  (->> colors
+       (map #(value-for-print (:value (peek (get-in board [:board %])))))
+       (interleave card-value-padding)
+       (apply str)
+       println))
+
+(>defn print-board!
+  "Prints a board to the console. If `FoW?` is true a fog of war is activated that obscures the hand of :player-2."
+  [board FoW?]
+  [map? boolean? :ret nil?]
+  (print-player! board :player-2 FoW?)
+  (println "--------------------------")
+  (println "  yel whi gre blu red hand")
+  (print-discards! board)
+  (println "--------------------------")
+  (print-player! board :player-1 false)
+  (println "###########################")
+  (println "Left in Deck: " (count (get-in board [:board :draw-pile]))))
+
+(comment
+  (print-board!
+    {:player-1 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
+                :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
+                :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :blue [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :red [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :hand [{:suit :yellow :value 5} {:suit :yellow :value 6}]}
+     :player-2 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
+                :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
+                :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :blue [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :red [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
+                :hand [{:suit :yellow :value 5} {:suit :yellow :value 6}]}
+     :board {:yellow [{:suit :yellow :value 2} {:suit :yellow :value 10}]
+             :white []
+             :green []
+             :blue []
+             :red []
+             :draw-pile []}}
+    true)
+  )
