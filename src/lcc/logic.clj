@@ -47,6 +47,12 @@
   ;; Expected: 65
   )
 
+(>defn game-ended?
+  "Checks whether the game ends after a player draws a card from the deck. The game ends if the deck is empty."
+  [board]
+  [map? :ret boolean?]
+  (empty? (get-in board [:board :draw-pile])))
+
 (>defn score-player
   "Scores a player. Assumes valid paths."
   [board player]
