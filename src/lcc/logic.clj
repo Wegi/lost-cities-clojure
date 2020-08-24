@@ -47,9 +47,17 @@
   ;; Expected: 65
   )
 
+(>defn score-player
+  "Scores a player. Assumes valid paths."
+  [board player]
+  [map? keyword? :ret int?]
+  (apply +
+         (map #(score-path (get-in board [player %])) [:yellow :white :red :green :blue])))
+
 (>defn score-game
   "Calculate scores for both players."
   [board]
-  [map? :ret (s/coll-of int?)]
-  ())
+  [map? :ret vector?]
+  [:player-1 (score-player board :player-1)
+   :player-2 (score-player board :player-2)])
 
