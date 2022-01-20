@@ -97,7 +97,10 @@
         counter (if (= :player-1 player) (range max-range) (range (dec max-range) -1 -1))]
     (doseq [index counter]
       (->> (if FoW? colors (conj colors :hand))
-           (map #(value-for-print (get-in board [player % index :value])))
+           (map #(let [value-print (value-for-print (get-in board [player % index :value]))]
+                   (if (= % :hand)
+                     (str (second (str (get-in board [player % index :suit]))) value-print)
+                     value-print)))
            (interleave card-value-padding)
            (apply str)
            println))))
@@ -123,7 +126,10 @@
   (println "--------------------------")
   (print-player! board :player-1 false)
   (println "###########################")
-  (println "Left in Deck: " (count (get-in board [:board :draw-pile]))))
+  (println "Left in Deck: " (count (get-in board [:board :draw-pile])))
+  (println (format "Cards in hand: \n  Player 1: %s \n  Player 2: %s"
+                   (count (get-in board [:player-1 :hand]))
+                   (count (get-in board [:player-2 :hand])))))
 
 (comment
   (print-board!
@@ -132,7 +138,7 @@
                 :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
                 :blue [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
                 :red [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :hand [{:suit :yellow :value 5} {:suit :yellow :value 6}]}
+                :hand [{:suit :yellow :value 5} {:suit :blue :value 10}]}
      :player-2 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
                 :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
                 :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
