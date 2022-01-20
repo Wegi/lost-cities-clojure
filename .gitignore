@@ -1,2 +1,5 @@
 .clj-kondo/.cache
 .nrepl-port
+.idea/libraries
+.idea/watcherTasks.xml
+.nrepl-port
