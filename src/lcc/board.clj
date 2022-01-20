@@ -40,7 +40,7 @@
   "Draw x cards. Return a tuple of the drawn cards and the rest of the deck."
   [deck n]
   [vector? int? :ret (s/tuple vector? vector?)]
-  [(take n deck) (vec (drop n deck))])
+  [(vec (take n deck)) (vec (drop n deck))])
 
 (>defn set-up-game
   "Sets up the game ready to go."
@@ -152,4 +152,5 @@
              :red []
              :draw-pile []}}
     true)
+  (print-board! (set-up-game) true)
   )
