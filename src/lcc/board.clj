@@ -144,7 +144,20 @@
                    (count (get-in board [:player-1 :hand]))
                    (count (get-in board [:player-2 :hand])))))
 
+(defn game
+  "The game-loop running a full party."
+  []
+  ;; TODO continue fleshing out the loop actions
+  (loop [input "starting"
+         board (set-up-game)]
+    (if (= "exit" input)
+      nil
+      (do
+        (print-board! board false)
+        (recur (read-line) board)))))
+
 (comment
+  (game)
   (print-board!
     (hand->path
       {:player-1 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
