@@ -69,6 +69,19 @@
     (when (logic/allowed-play? path card)
       (update-in state [player suit] conj card))))
 
+(>defn- vec-without-nth
+  "Returns a vector without the nth element. Throws an exception, if index is outside of vector."
+  [collection index]
+  [vector? nat-int? :ret vector?]
+  (into (subvec collection 0 index) (subvec collection (inc index))))
+
+(>defn hand->path
+  "Plays a card from the hand onto a path if possible. Returns the new board."
+  [state player index]
+  [map? keyword? nat-int? :ret (? map?)]
+  (when-let [new-board (add-to-path state (get-in state [player :hand index]) player)]
+    (update-in new-board [player :hand] #(vec-without-nth % index))))
+
 (>defn draw
   "A player draws a card into their hand."
   [state player]
@@ -133,24 +146,26 @@
 
 (comment
   (print-board!
-    {:player-1 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
-                :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
-                :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :blue [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :red [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :hand [{:suit :yellow :value 5} {:suit :blue :value 10}]}
-     :player-2 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
-                :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
-                :green [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :blue [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :red [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3}]
-                :hand [{:suit :yellow :value 5} {:suit :yellow :value 6}]}
-     :board {:yellow [{:suit :yellow :value 2} {:suit :yellow :value 10}]
-             :white []
-             :green []
-             :blue []
-             :red []
-             :draw-pile []}}
+    (hand->path
+      {:player-1 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
+                  :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
+                  :green [{:suit :green :value :wager} {:suit :green :value :wager} {:suit :green :value 3}]
+                  :blue [{:suit :blue :value :wager} {:suit :blue :value :wager} {:suit :blue :value 3}]
+                  :red [{:suit :red :value :wager} {:suit :red :value :wager} {:suit :red :value 3}]
+                  :hand [{:suit :yellow :value 5} {:suit :blue :value 10}]}
+       :player-2 {:yellow [{:suit :yellow :value 3} {:suit :yellow :value 5} {:suit :yellow :value 6}]
+                  :white [{:suit :white :value :wager} {:suit :white :value :wager} {:suit :white :value 3} {:suit :white :value 5} {:suit :white :value 10}]
+                  :green [{:suit :green :value :wager} {:suit :green :value :wager} {:suit :green :value 3}]
+                  :blue [{:suit :blue :value :wager} {:suit :blue :value :wager} {:suit :blue :value 3}]
+                  :red [{:suit :red :value :wager} {:suit :red :value :wager} {:suit :red :value 3}]
+                  :hand [{:suit :yellow :value 5} {:suit :yellow :value 6}]}
+       :board {:yellow [{:suit :yellow :value 2} {:suit :yellow :value 10}]
+               :white []
+               :green []
+               :blue []
+               :red []
+               :draw-pile []}}
+      :player-1 1)
     true)
   (print-board! (set-up-game) true)
   )
